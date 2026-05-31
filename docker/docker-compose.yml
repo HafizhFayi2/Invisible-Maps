@@ -1,0 +1,49 @@
+version: '3.9'
+
+services:
+  # ── API Server ──────────────────────────────────────────────
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: invisible-map-api
+    ports:
+      - '3001:8080'
+    environment:
+      NODE_ENV: development
+      PORT: 8080
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+      ADMIN_API_TOKEN: ${ADMIN_API_TOKEN}
+
+    volumes:
+      - ../server/logs:/app/server/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:8080/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── Frontend Dev Server ─────────────────────────────────────
+  web:
+    image: node:20-slim
+    container_name: invisible-map-web
+    working_dir: /app
+    command: npm run dev:web -- --host
+    ports:
+      - '5173:5173'
+    volumes:
+      - ..:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://api:8080
+    depends_on:
+      - api
+    restart: unless-stopped
+
+networks:
+  default:
+    name: invisible-map-net

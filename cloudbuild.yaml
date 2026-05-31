@@ -1,0 +1,46 @@
+steps:
+  # Build the Docker image — pass VITE_* as --build-arg so
+  # Dockerfile ARG → .env → Vite bakes them into the JS bundle.
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - build
+      - '--build-arg'
+      - 'VITE_GEMINI_API_KEY=${_VITE_GEMINI_API_KEY}'
+      - '--build-arg'
+      - 'VITE_GEMINI_BACKUP_KEYS=${_VITE_GEMINI_BACKUP_KEYS}'
+      - '--build-arg'
+      - 'VITE_SUPABASE_URL=${_VITE_SUPABASE_URL}'
+      - '--build-arg'
+      - 'VITE_SUPABASE_ANON_KEY=${_VITE_SUPABASE_ANON_KEY}'
+      - '--build-arg'
+      - 'VITE_API_BASE_URL=${_VITE_API_BASE_URL}'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/invisible-map:$BUILD_ID'
+      - '.'
+
+  # Push image to Artifact Registry / Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/invisible-map:$BUILD_ID']
+
+  # Deploy to Cloud Run (runtime env vars are set separately in Cloud Run console)
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - invisible-map
+      - '--image=gcr.io/$PROJECT_ID/invisible-map:$BUILD_ID'
+      - '--region=asia-southeast2'
+      - '--platform=managed'
+
+# ─── Substitutions ────────────────────────────────────────────────────────────
+# Set these in Cloud Build Trigger → "Substitution variables"
+substitutions:
+  _VITE_GEMINI_API_KEY: ''
+  _VITE_GEMINI_BACKUP_KEYS: ''
+  _VITE_SUPABASE_URL: ''
+  _VITE_SUPABASE_ANON_KEY: ''
+  _VITE_API_BASE_URL: ''
+
+images:
+  - 'gcr.io/$PROJECT_ID/invisible-map:$BUILD_ID'

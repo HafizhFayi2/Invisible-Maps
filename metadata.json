@@ -1,0 +1,6 @@
+{
+  "name": "Invisible Map",
+  "description": "Hyper-local community mapping for informal MSMEs, featuring AI-powered discovery, merchant insights, and community verification.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["AI-powered discovery", "Community verification workflow", "Real-time demand intelligence", "AR wayfinding"]
+}
